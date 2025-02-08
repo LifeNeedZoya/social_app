@@ -1,15 +1,16 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:social_app/features/auth/domain/entities/app_user.dart';
 import 'package:social_app/features/auth/repos/auth_repo.dart';
 
 class FirebaseAuthRepo implements AuthRepo {
   final FirebaseAuth firebaseAuth = FirebaseAuth.instance;
+  final FirebaseFirestore firebaseFirestore = FirebaseFirestore.instance;
 
   @override
   Future<AppUser?> loginWithEmailPassword(String email, String password) async {
     try {
-      UserCredential userCredential = await firebaseAuth
-          .signInWithEmailAndPassword(email: email, password: password);
+      UserCredential userCredential = await firebaseAuth.signInWithEmailAndPassword(email: email, password: password);
 
       AppUser user = AppUser(
         uid: userCredential.user!.uid,
@@ -28,11 +29,9 @@ class FirebaseAuthRepo implements AuthRepo {
   }
 
   @override
-  Future<AppUser?> registerWithEmailPassword(
-      String name, String email, String password) async {
+  Future<AppUser?> registerWithEmailPassword(String name, String email, String password) async {
     try {
-      UserCredential userCredential =
-          await firebaseAuth.createUserWithEmailAndPassword(
+      UserCredential userCredential = await firebaseAuth.createUserWithEmailAndPassword(
         email: email,
         password: password,
       );
@@ -42,10 +41,12 @@ class FirebaseAuthRepo implements AuthRepo {
         email: email,
         name: name,
       );
+      await firebaseFirestore.collection("users").doc(user.uid).set(user.toJson());
 
       return user;
     } catch (e) {
-      throw Exception("Register failed");
+      print("excepton: $e");
+      throw Exception("Register failed $e");
     }
   }
 
